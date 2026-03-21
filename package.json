@@ -1,0 +1,31 @@
+{
+  "name": "tokenguard",
+  "version": "1.0.0",
+  "description": "Proxy de API Intermediário Universal rodando no localhost com otimizador de tokens.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win"
+  },
+  "build": {
+    "appId": "com.tokenguard.app",
+    "productName": "TokenGuard",
+    "win": {
+      "target": "nsis"
+    },
+    "directories": {
+      "output": "release"
+    }
+  },
+  "dependencies": {
+    "express": "^4.22.1",
+    "gpt-tokenizer": "^3.4.0",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "electron": "^29.4.6",
+    "electron-builder": "^26.8.1"
+  },
+  "author": "TokenGuard Team",
+  "license": "ISC"
+}
