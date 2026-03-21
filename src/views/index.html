@@ -1,18 +1,19 @@
 <!-- src/views/index.html -->
 <!--
-  🏛️ ARQUITETURA: View — Dashboard do TokenGuard
+  🏛️ ARQUITETURA: View — Dashboard Premium do TokenGuard
   
-  DECISÃO TÉCNICA: Interface de monitoramento premium com:
-    - Log ao vivo de requisições (modelo, provedor, tokens economizados)
-    - Métricas de economia em tempo real
-    - Toggle de proxy (ligar/desligar)
-    - Instruções de configuração para IDEs
+  DESIGN: Interface premium de monitoramento inspirada em dashboards SaaS modernos.
+  - Glassmorphism com blur e transparências
+  - Gradientes vibrantes (emerald → cyan → violet)
+  - Micro-animações em todos os elementos interativos
+  - Gráfico temporal de economia (Chart.js)
+  - Log de requisições ao vivo com badges de provedor animados
+  - System tray com indicador de status
   
-  ZERO-CONFIG: Não há seletor de modelo nem campos de API key.
+  ZERO-CONFIG: Sem seletor de modelo, sem campos de API key.
   Tudo é detectado automaticamente pelo proxy.
   
-  DESIGN: Dark theme com gradientes, glassmorphism, e micro-animações.
-  Usa Tailwind CSS local para funcionar 100% offline.
+  COMPATIBILIDADE: Instruções para VS Code Copilot, Cursor, Antigravity, Continue
 -->
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -21,111 +22,208 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TokenGuard Dashboard</title>
     <script src="tailwind.js"></script>
+    <!-- Chart.js CDN para gráficos premium -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <style>
-        /* === Design System TokenGuard === */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        /* ═══════════════ DESIGN SYSTEM TOKENGUARD ═══════════════ */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-        * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        :root {
+            --bg-primary: #060918;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --border-subtle: rgba(148, 163, 184, 0.08);
+            --glow-emerald: rgba(16, 185, 129, 0.15);
+            --glow-cyan: rgba(6, 182, 212, 0.15);
+            --glow-violet: rgba(139, 92, 246, 0.15);
+        }
+
+        * { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            background: var(--bg-primary);
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(6, 182, 212, 0.04) 0%, transparent 50%);
         }
 
-        /* Glassmorphism Cards */
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(148, 163, 184, 0.1);
-            transition: all 0.3s ease;
+        /* Glassmorphism premium */
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
         }
-        .glass-card:hover {
-            border-color: rgba(148, 163, 184, 0.2);
-            transform: translateY(-1px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        .glass:hover {
+            border-color: rgba(148, 163, 184, 0.15);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
         }
 
-        /* Toggle Switch Custom */
+        /* Metric cards com glow */
+        .metric-card {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        .metric-card:hover { transform: translateY(-2px); }
+        .metric-card:hover::before { opacity: 1; }
+        .metric-card.emerald::before { background: linear-gradient(90deg, transparent, #10b981, transparent); }
+        .metric-card.cyan::before { background: linear-gradient(90deg, transparent, #06b6d4, transparent); }
+        .metric-card.violet::before { background: linear-gradient(90deg, transparent, #8b5cf6, transparent); }
+        .metric-card.amber::before { background: linear-gradient(90deg, transparent, #f59e0b, transparent); }
+
+        /* Toggle premium */
         .toggle-track {
-            width: 52px; height: 28px;
-            background: #374151;
-            border-radius: 14px;
+            width: 48px; height: 26px;
+            background: linear-gradient(135deg, #1e293b, #334155);
+            border-radius: 13px;
             position: relative;
             cursor: pointer;
-            transition: background 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(148, 163, 184, 0.1);
         }
-        .toggle-track.active { background: #10b981; }
+        .toggle-track.active { 
+            background: linear-gradient(135deg, #059669, #10b981);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
         .toggle-thumb {
-            width: 22px; height: 22px;
+            width: 20px; height: 20px;
             background: white;
             border-radius: 50%;
             position: absolute;
             top: 3px; left: 3px;
-            transition: transform 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
-        .toggle-track.active .toggle-thumb { transform: translateX(24px); }
+        .toggle-track.active .toggle-thumb { transform: translateX(22px); }
 
-        /* Pulse Animation para indicador ao vivo */
-        @keyframes pulse-live {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        /* Pulse para indicadores vivos */
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+            50% { opacity: 0.4; box-shadow: 0 0 8px currentColor; }
         }
-        .pulse-live { animation: pulse-live 2s ease-in-out infinite; }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
-        /* Glow effect para números */
-        .glow-number {
-            text-shadow: 0 0 20px rgba(16, 185, 129, 0.4),
-                         0 0 40px rgba(16, 185, 129, 0.2);
+        /* Counter animation */
+        @keyframes countUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .count-animate { animation: countUp 0.4s ease-out; }
+
+        /* Glow nos números */
+        .glow-emerald { 
+            color: #34d399;
+            text-shadow: 0 0 30px rgba(16, 185, 129, 0.4), 0 0 60px rgba(16, 185, 129, 0.1);
+        }
+        .glow-cyan { 
+            color: #22d3ee;
+            text-shadow: 0 0 30px rgba(6, 182, 212, 0.4);
+        }
+        .glow-violet { 
+            color: #a78bfa;
+            text-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+        }
+        .glow-amber {
+            color: #fbbf24;
+            text-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
         }
 
-        /* Log entries com animação de entrada */
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
+        /* Log entries animados */
+        @keyframes slideInLog {
+            from { transform: translateX(-16px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        .log-entry { animation: slideIn 0.3s ease-out; }
+        .log-entry { animation: slideInLog 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        /* Scrollbar custom para o log */
-        .log-container::-webkit-scrollbar { width: 4px; }
-        .log-container::-webkit-scrollbar-track { background: transparent; }
-        .log-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+        /* Scrollbar minimal */
+        .log-scroll::-webkit-scrollbar { width: 3px; }
+        .log-scroll::-webkit-scrollbar-track { background: transparent; }
+        .log-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.15); border-radius: 3px; }
+        .log-scroll::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.3); }
 
-        /* Provider badges */
-        .badge-openai { background: rgba(16, 163, 127, 0.15); color: #10a37f; border: 1px solid rgba(16, 163, 127, 0.3); }
-        .badge-anthropic { background: rgba(217, 119, 87, 0.15); color: #d97757; border: 1px solid rgba(217, 119, 87, 0.3); }
-        .badge-gemini { background: rgba(66, 133, 244, 0.15); color: #4285f4; border: 1px solid rgba(66, 133, 244, 0.3); }
-        .badge-cache { background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+        /* Provider badges premium */
+        .badge { padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+        .badge-openai { background: rgba(16, 163, 127, 0.12); color: #34d399; border: 1px solid rgba(16, 163, 127, 0.2); }
+        .badge-anthropic { background: rgba(251, 146, 60, 0.12); color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.2); }
+        .badge-gemini { background: rgba(96, 165, 250, 0.12); color: #60a5fa; border: 1px solid rgba(96, 165, 250, 0.2); }
+        .badge-deepseek { background: rgba(45, 212, 191, 0.12); color: #2dd4bf; border: 1px solid rgba(45, 212, 191, 0.2); }
+        .badge-cache { background: rgba(250, 204, 21, 0.12); color: #fbbf24; border: 1px solid rgba(250, 204, 21, 0.2); }
+        .badge-stream { background: rgba(139, 92, 246, 0.12); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.2); }
 
-        /* Config code block style */
+        /* Config block */
         .config-block {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(148, 163, 184, 0.15);
-            font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+            background: rgba(2, 6, 23, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        /* Tab buttons */
+        .tab-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+        }
+        .tab-btn.active { background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+        .tab-btn:not(.active) { background: transparent; color: #64748b; border: 1px solid transparent; }
+        .tab-btn:not(.active):hover { color: #94a3b8; background: rgba(148, 163, 184, 0.05); }
+
+        /* Shimmer loading effect */
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+
+        /* Chart canvas */
+        #economy-chart {
+            max-height: 180px !important;
+        }
+
+        /* Subtle gradient border on header */
+        .header-border {
+            border-image: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), rgba(139, 92, 246, 0.3), transparent) 1;
         }
     </style>
 </head>
-<body class="text-white min-h-screen p-6">
-    <div class="max-w-4xl mx-auto space-y-5">
+<body class="text-white min-h-screen p-5 select-none">
+    <div class="max-w-5xl mx-auto space-y-4">
 
         <!-- ═══════════════ HEADER ═══════════════ -->
-        <header class="flex justify-between items-center pb-4">
-            <div class="flex items-center gap-4">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-lg font-bold shadow-lg shadow-emerald-500/20">
-                    🛡️
+        <header class="flex justify-between items-center pb-3 border-b header-border">
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 via-cyan-500 to-violet-500 flex items-center justify-center text-base font-black shadow-lg shadow-emerald-500/20">
+                        <span style="font-size: 18px">🛡️</span>
+                    </div>
+                    <div id="header-dot" class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-glow border border-[#060918]"></div>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-400">
-                        TokenGuard
+                    <h1 class="text-xl font-extrabold tracking-tight">
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-300 to-violet-400">TokenGuard</span>
                     </h1>
-                    <p class="text-slate-500 text-xs font-medium tracking-wide uppercase">Proxy Universal Zero-Config</p>
+                    <p class="text-[10px] text-slate-600 font-semibold tracking-widest uppercase">Proxy Inteligente • Zero-Config</p>
                 </div>
             </div>
-
-            <!-- Toggle ON/OFF -->
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-2">
-                    <div id="live-dot" class="w-2 h-2 rounded-full bg-emerald-400 pulse-live"></div>
-                    <span id="status-text" class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Proxy Ativo</span>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/30 border border-slate-700/30">
+                    <div id="live-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-glow"></div>
+                    <span id="status-text" class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Ativo</span>
                 </div>
                 <div id="proxy-toggle" class="toggle-track active">
                     <div class="toggle-thumb"></div>
@@ -135,133 +233,275 @@
 
         <!-- ═══════════════ MÉTRICAS ═══════════════ -->
         <div class="grid grid-cols-4 gap-3">
-            <!-- Tokens Economizados -->
-            <div class="glass-card rounded-xl p-4 text-center">
-                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Tokens Salvos</p>
-                <p id="stat-tokens" class="text-3xl font-extrabold text-emerald-400 glow-number">0</p>
+            <div class="glass metric-card emerald rounded-xl p-4 text-center">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Tokens Salvos</p>
+                <p id="stat-tokens" class="text-3xl font-black glow-emerald count-animate">0</p>
+                <p class="text-[9px] text-slate-600 mt-1 font-semibold">via compressão + cache</p>
             </div>
-            <!-- Economia em USD -->
-            <div class="glass-card rounded-xl p-4 text-center">
-                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Economia</p>
-                <p class="text-3xl font-extrabold text-emerald-400 glow-number">$<span id="stat-money">0.00</span></p>
+            <div class="glass metric-card emerald rounded-xl p-4 text-center">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Economia Total</p>
+                <p class="text-3xl font-black glow-emerald count-animate">$<span id="stat-money">0.00</span></p>
+                <p class="text-[9px] text-slate-600 mt-1 font-semibold">estimativa de custo</p>
             </div>
-            <!-- Requisições -->
-            <div class="glass-card rounded-xl p-4 text-center">
-                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Requisições</p>
-                <p id="stat-requests" class="text-3xl font-extrabold text-cyan-400">0</p>
+            <div class="glass metric-card cyan rounded-xl p-4 text-center">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Requisições</p>
+                <p id="stat-requests" class="text-3xl font-black glow-cyan count-animate">0</p>
+                <p class="text-[9px] text-slate-600 mt-1 font-semibold">interceptadas pelo proxy</p>
             </div>
-            <!-- Cache Hit Rate -->
-            <div class="glass-card rounded-xl p-4 text-center">
-                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Cache Hit</p>
-                <p id="stat-cache-rate" class="text-3xl font-extrabold text-yellow-400">0%</p>
+            <div class="glass metric-card amber rounded-xl p-4 text-center">
+                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1.5">Cache Hit Rate</p>
+                <p id="stat-cache-rate" class="text-3xl font-black glow-amber count-animate">0%</p>
+                <p class="text-[9px] text-slate-600 mt-1 font-semibold">respostas do SQLite</p>
             </div>
         </div>
 
-        <!-- ═══════════════ LOG AO VIVO + CONFIG ═══════════════ -->
-        <div class="grid grid-cols-5 gap-4">
-            
-            <!-- LOG DE REQUISIÇÕES (3 colunas) -->
-            <div class="col-span-3 glass-card rounded-xl p-4">
+        <!-- ═══════════════ GRÁFICO + LOG ═══════════════ -->
+        <div class="grid grid-cols-5 gap-3">
+
+            <!-- GRÁFICO DE ECONOMIA (2 colunas) -->
+            <div class="col-span-2 glass rounded-xl p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">📈 Economia Temporal</h2>
+                    <span class="text-[9px] text-slate-600 font-semibold">Últimos 30 pontos</span>
+                </div>
+                <div class="relative" style="height: 180px;">
+                    <canvas id="economy-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- LOG DE REQUISIÇÕES AO VIVO (3 colunas) -->
+            <div class="col-span-3 glass rounded-xl p-4">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full bg-cyan-400 pulse-live"></div>
-                        <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Requisições ao Vivo</h2>
+                        <div class="w-1.5 h-1.5 rounded-full bg-cyan-400 pulse-glow"></div>
+                        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Requisições ao Vivo</h2>
                     </div>
-                    <button id="btn-clear-log" class="text-xs text-slate-500 hover:text-slate-300 transition-colors px-2 py-1 rounded hover:bg-slate-700/50">
+                    <button id="btn-clear-log" class="text-[10px] text-slate-600 hover:text-slate-400 transition-colors px-2 py-0.5 rounded-md hover:bg-slate-800/50 font-semibold">
                         Limpar
                     </button>
                 </div>
-                <div id="request-log" class="log-container space-y-1.5 overflow-y-auto" style="max-height: 260px; min-height: 260px;">
-                    <!-- Log entries serão inseridos aqui via JS -->
-                    <div id="log-empty" class="flex flex-col items-center justify-center h-full text-slate-600 py-16">
-                        <span class="text-3xl mb-2">📡</span>
-                        <p class="text-sm font-medium">Aguardando requisições da IDE...</p>
-                        <p class="text-xs mt-1">Configure sua IDE com o endereço abaixo</p>
+                <div id="request-log" class="log-scroll space-y-1 overflow-y-auto" style="max-height: 195px; min-height: 195px;">
+                    <div id="log-empty" class="flex flex-col items-center justify-center h-full text-slate-700 py-12">
+                        <div class="text-4xl mb-2 opacity-50">📡</div>
+                        <p class="text-xs font-semibold">Aguardando requisições da IDE...</p>
+                        <p class="text-[10px] mt-1 text-slate-800">Configure sua IDE com o endereço abaixo</p>
                     </div>
-                </div>
-            </div>
-
-            <!-- INSTRUÇÕES DE CONFIGURAÇÃO (2 colunas) -->
-            <div class="col-span-2 glass-card rounded-xl p-4">
-                <h2 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">🔌 Configuração</h2>
-                
-                <div class="space-y-3">
-                    <!-- VS Code / Cursor -->
-                    <div>
-                        <p class="text-xs font-semibold text-violet-400 mb-1.5">VS Code / Cursor / Copilot</p>
-                        <div class="config-block rounded-lg p-3 text-xs leading-relaxed">
-                            <span class="text-slate-500">// settings.json</span><br>
-                            <span class="text-purple-400">"openai.baseURL"</span><span class="text-slate-400">:</span> <span class="text-emerald-400">"http://localhost:3000/v1"</span>
-                        </div>
-                    </div>
-
-                    <!-- Antigravity / Continue / Outros -->
-                    <div>
-                        <p class="text-xs font-semibold text-cyan-400 mb-1.5">Antigravity / Continue</p>
-                        <div class="config-block rounded-lg p-3 text-xs leading-relaxed">
-                            <span class="text-slate-500">// Base URL do provedor</span><br>
-                            <span class="text-emerald-400">http://localhost:3000/v1</span>
-                        </div>
-                    </div>
-
-                    <!-- Separador -->
-                    <div class="border-t border-slate-700/50 pt-2">
-                        <div class="flex items-start gap-2">
-                            <span class="text-amber-400 text-xs mt-0.5">💡</span>
-                            <p class="text-xs text-slate-500 leading-relaxed">
-                                Use sua <strong class="text-slate-400">API key real</strong> do provedor na config da IDE. 
-                                O TokenGuard extrai a chave automaticamente do header e roteia para o provedor correto.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Limpar Cache -->
-                    <button id="btn-clear-cache" class="w-full text-xs text-slate-500 hover:text-red-400 border border-slate-700/50 hover:border-red-500/30 rounded-lg py-2 transition-all">
-                        🗑️ Limpar Cache SQLite
-                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- ═══════════════ BARRA DE CACHE ═══════════════ -->
-        <div class="glass-card rounded-xl p-3 flex items-center gap-4">
-            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Cache</span>
-            <div class="flex-1 bg-slate-800 rounded-full h-2">
-                <div id="stat-cache-bar" class="bg-gradient-to-r from-yellow-500 to-emerald-500 h-2 rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+        <!-- ═══════════════ CONFIGURAÇÃO (TABS) ═══════════════ -->
+        <div class="glass rounded-xl p-4">
+            <div class="flex items-center gap-2 mb-3">
+                <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-3">🔌 Configuração</h2>
+                <button class="tab-btn active" data-tab="copilot">GitHub Copilot</button>
+                <button class="tab-btn" data-tab="cursor">Cursor</button>
+                <button class="tab-btn" data-tab="antigravity">Antigravity</button>
+                <button class="tab-btn" data-tab="continue">Continue / Cline</button>
             </div>
-            <span id="stat-cache-count" class="text-xs text-slate-500 whitespace-nowrap">0 hits / 0 req</span>
+
+            <!-- Tab: GitHub Copilot -->
+            <div id="tab-copilot" class="tab-content">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <p class="text-[10px] font-bold text-violet-400 mb-1.5 uppercase tracking-wider">Método 1: BYOK (VS Code v1.99+)</p>
+                        <div class="config-block rounded-lg p-3 text-[11px] leading-relaxed">
+                            <span class="text-slate-600">1. Abra Copilot Chat → Model Picker</span><br>
+                            <span class="text-slate-600">2. Clique "Manage Models..."</span><br>
+                            <span class="text-slate-600">3. Add Provider → OpenAI Compatible</span><br>
+                            <span class="text-slate-600">4. Base URL:</span><br>
+                            <span class="text-emerald-400 font-semibold">   http://localhost:3000/v1</span><br>
+                            <span class="text-slate-600">5. API Key: </span><span class="text-amber-400">sua key real do provedor</span>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-violet-400 mb-1.5 uppercase tracking-wider">Método 2: Extensão OAI Compatible</p>
+                        <div class="config-block rounded-lg p-3 text-[11px] leading-relaxed">
+                            <span class="text-slate-600">1. Instale: "OAI Compatible Provider</span><br>
+                            <span class="text-slate-600">   for Copilot" no Marketplace</span><br>
+                            <span class="text-slate-600">2. Settings → Extensions → OAI:</span><br>
+                            <span class="text-purple-400">"oaicopilot.baseUrl"</span><span class="text-slate-500">:</span><br>
+                            <span class="text-emerald-400 font-semibold">   "http://localhost:3000/v1"</span><br>
+                            <span class="text-slate-600">3. Selecione modelos no model picker</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Cursor -->
+            <div id="tab-cursor" class="tab-content" style="display:none">
+                <div class="config-block rounded-lg p-3 text-[11px] leading-relaxed max-w-md">
+                    <span class="text-slate-600">// Settings → Models → OpenAI API Key</span><br>
+                    <span class="text-slate-600">// Override API Base URL:</span><br>
+                    <span class="text-emerald-400 font-semibold">http://localhost:3000/v1</span><br><br>
+                    <span class="text-slate-600">// Use qualquer modelo — TokenGuard</span><br>
+                    <span class="text-slate-600">// detecta o provedor automaticamente</span>
+                </div>
+            </div>
+
+            <!-- Tab: Antigravity -->
+            <div id="tab-antigravity" class="tab-content" style="display:none">
+                <div class="config-block rounded-lg p-3 text-[11px] leading-relaxed max-w-md">
+                    <span class="text-slate-600">// Configure o provedor de IA:</span><br>
+                    <span class="text-slate-600">// Base URL do provedor:</span><br>
+                    <span class="text-emerald-400 font-semibold">http://localhost:3000/v1</span><br><br>
+                    <span class="text-slate-600">// API Key: sua chave real do provedor</span><br>
+                    <span class="text-slate-600">// Modelo: qualquer um (auto-detectado)</span>
+                </div>
+            </div>
+
+            <!-- Tab: Continue / Cline -->
+            <div id="tab-continue" class="tab-content" style="display:none">
+                <div class="config-block rounded-lg p-3 text-[11px] leading-relaxed max-w-md">
+                    <span class="text-slate-600">// config.json do Continue/Cline</span><br>
+                    <span class="text-purple-400">"models"</span><span class="text-slate-500">: [{</span><br>
+                    <span class="text-purple-400">  "provider"</span><span class="text-slate-500">:</span> <span class="text-emerald-400">"openai"</span><span class="text-slate-500">,</span><br>
+                    <span class="text-purple-400">  "apiBase"</span><span class="text-slate-500">:</span> <span class="text-emerald-400">"http://localhost:3000/v1"</span><span class="text-slate-500">,</span><br>
+                    <span class="text-purple-400">  "apiKey"</span><span class="text-slate-500">:</span> <span class="text-amber-400">"sua-key-real"</span><span class="text-slate-500">,</span><br>
+                    <span class="text-purple-400">  "model"</span><span class="text-slate-500">:</span> <span class="text-emerald-400">"claude-sonnet-4.6"</span><br>
+                    <span class="text-slate-500">}]</span>
+                </div>
+            </div>
+
+            <!-- Info box -->
+            <div class="flex items-start gap-2 mt-3 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                <span class="text-amber-400 text-xs mt-px">💡</span>
+                <p class="text-[10px] text-slate-500 leading-relaxed">
+                    Use sua <strong class="text-slate-400">API key real</strong> do provedor desejado. O TokenGuard <strong class="text-emerald-400">nunca armazena</strong> suas chaves — 
+                    extrai do header em tempo real e descarta após uso. Suporta <strong class="text-slate-400">35+ modelos</strong> de 8 provedores automaticamente.
+                </p>
+            </div>
+        </div>
+
+        <!-- ═══════════════ CACHE BAR + ACTIONS ═══════════════ -->
+        <div class="flex gap-3">
+            <div class="flex-1 glass rounded-xl px-4 py-2.5 flex items-center gap-4">
+                <span class="text-[9px] font-bold text-slate-600 uppercase tracking-widest whitespace-nowrap">Cache SQLite</span>
+                <div class="flex-1 bg-slate-900/50 rounded-full h-1.5">
+                    <div id="stat-cache-bar" class="bg-gradient-to-r from-amber-500 via-emerald-500 to-cyan-500 h-1.5 rounded-full transition-all duration-700" style="width: 0%"></div>
+                </div>
+                <span id="stat-cache-count" class="text-[10px] text-slate-600 font-semibold whitespace-nowrap">0/0</span>
+            </div>
+            <button id="btn-clear-cache" class="glass rounded-xl px-4 py-2.5 text-[10px] text-slate-600 hover:text-red-400 font-semibold transition-all hover:border-red-500/20 whitespace-nowrap">
+                🗑️ Limpar Cache
+            </button>
         </div>
 
     </div>
 
     <script>
         /**
-         * 🎛️ Frontend Script — Comunicação IPC com o Backend Electron
+         * 🎛️ Frontend Script — Dashboard TokenGuard
          * 
-         * Este script gerencia:
-         *   - Toggle de proxy (ligar/desligar)
-         *   - Estatísticas ao vivo (tokens, economia, cache)
-         *   - Log de requisições em tempo real
-         *   - Limpar cache e log
+         * IPC Real com Electron:
+         *   - Toggle proxy
+         *   - Métricas ao vivo
+         *   - Log de requisições
+         *   - Gráfico temporal Chart.js
+         *   - Tabs de configuração
          */
         const { ipcRenderer } = require('electron');
 
-        // === TOGGLE DO PROXY ===
+        // ═══════════════ TOGGLE PROXY ═══════════════
         const toggleTrack = document.getElementById('proxy-toggle');
         const statusText = document.getElementById('status-text');
         const liveDot = document.getElementById('live-dot');
+        const headerDot = document.getElementById('header-dot');
         let proxyActive = true;
 
         toggleTrack.addEventListener('click', () => {
             proxyActive = !proxyActive;
             toggleTrack.classList.toggle('active', proxyActive);
-            statusText.textContent = proxyActive ? 'Proxy Ativo' : 'Proxy Inativo';
-            statusText.className = `text-xs font-semibold uppercase tracking-wider ${proxyActive ? 'text-emerald-400' : 'text-red-400'}`;
-            liveDot.className = `w-2 h-2 rounded-full ${proxyActive ? 'bg-emerald-400 pulse-live' : 'bg-red-400'}`;
+            statusText.textContent = proxyActive ? 'Ativo' : 'Inativo';
+            statusText.className = `text-[10px] font-bold uppercase tracking-widest ${proxyActive ? 'text-emerald-400' : 'text-red-400'}`;
+            liveDot.className = `w-1.5 h-1.5 rounded-full ${proxyActive ? 'bg-emerald-400 pulse-glow' : 'bg-red-400'}`;
+            headerDot.className = `absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-[#060918] ${proxyActive ? 'bg-emerald-400 pulse-glow' : 'bg-red-400'}`;
             ipcRenderer.send('toggle-proxy', proxyActive);
         });
 
-        // === ESTATÍSTICAS EM TEMPO REAL ===
+        // ═══════════════ CHART.JS — GRÁFICO TEMPORAL ═══════════════
+        const chartData = {
+            labels: [],
+            datasets: [{
+                label: 'Tokens Economizados',
+                data: [],
+                borderColor: '#34d399',
+                backgroundColor: (ctx) => {
+                    const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 180);
+                    g.addColorStop(0, 'rgba(16, 185, 129, 0.25)');
+                    g.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+                    return g;
+                },
+                fill: true,
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                pointHoverBackgroundColor: '#34d399',
+                pointHoverBorderColor: '#fff',
+                pointHoverBorderWidth: 2
+            }]
+        };
+
+        const chart = new Chart(document.getElementById('economy-chart'), {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 600, easing: 'easeOutCubic' },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleColor: '#94a3b8',
+                        bodyColor: '#34d399',
+                        borderColor: 'rgba(148, 163, 184, 0.1)',
+                        borderWidth: 1,
+                        padding: 10,
+                        cornerRadius: 8,
+                        titleFont: { family: 'Inter', size: 10, weight: '600' },
+                        bodyFont: { family: 'JetBrains Mono', size: 12, weight: '600' },
+                        callbacks: {
+                            label: (ctx) => `${ctx.raw.toLocaleString('pt-BR')} tokens`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.03)', drawBorder: false },
+                        ticks: { color: '#334155', font: { size: 8, family: 'JetBrains Mono' }, maxTicksLimit: 6, maxRotation: 0 }
+                    },
+                    y: {
+                        display: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.03)', drawBorder: false },
+                        ticks: { color: '#334155', font: { size: 9, family: 'JetBrains Mono' }, callback: (v) => v >= 1000 ? (v/1000).toFixed(0)+'k' : v },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        let cumulativeTokens = 0;
+
+        function addChartPoint(tokensAdded) {
+            cumulativeTokens += tokensAdded;
+            const now = new Date();
+            const label = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+            
+            chartData.labels.push(label);
+            chartData.datasets[0].data.push(cumulativeTokens);
+            
+            if (chartData.labels.length > 30) {
+                chartData.labels.shift();
+                chartData.datasets[0].data.shift();
+            }
+            chart.update('none');
+        }
+
+        // ═══════════════ MÉTRICAS EM TEMPO REAL ═══════════════
         const statTokens = document.getElementById('stat-tokens');
         const statMoney = document.getElementById('stat-money');
         const statRequests = document.getElementById('stat-requests');
@@ -279,81 +519,73 @@
                 : 0;
 
             statCacheRate.innerText = `${hitRate}%`;
-            statCacheBar.style.width = `${hitRate}%`;
-            statCacheCount.innerText = `${stats.cacheHits} hits / ${stats.totalRequests} req`;
+            statCacheBar.style.width = `${Math.min(hitRate, 100)}%`;
+            statCacheCount.innerText = `${stats.cacheHits}/${stats.totalRequests}`;
         });
 
-        // === LOG DE REQUISIÇÕES AO VIVO ===
+        // ═══════════════ LOG DE REQUISIÇÕES ═══════════════
         const requestLog = document.getElementById('request-log');
         const logEmpty = document.getElementById('log-empty');
 
-        /**
-         * Retorna o badge HTML baseado no provedor detectado.
-         */
-        function getProviderBadge(provider) {
-            const badges = {
-                'openai': '<span class="badge-openai text-xs font-bold px-2 py-0.5 rounded-full">OpenAI</span>',
-                'anthropic': '<span class="badge-anthropic text-xs font-bold px-2 py-0.5 rounded-full">Claude</span>',
-                'gemini': '<span class="badge-gemini text-xs font-bold px-2 py-0.5 rounded-full">Gemini</span>'
+        function getBadge(provider) {
+            const map = {
+                'openai': '<span class="badge badge-openai">OpenAI</span>',
+                'anthropic': '<span class="badge badge-anthropic">Claude</span>',
+                'gemini': '<span class="badge badge-gemini">Gemini</span>',
+                'deepseek': '<span class="badge badge-deepseek">DeepSeek</span>'
             };
-            return badges[provider] || `<span class="text-xs font-bold text-slate-400 bg-slate-700/50 px-2 py-0.5 rounded-full">${provider}</span>`;
+            return map[provider] || `<span class="badge" style="background:rgba(148,163,184,0.1);color:#94a3b8;border:1px solid rgba(148,163,184,0.2)">${provider}</span>`;
         }
 
-        ipcRenderer.on('request-logged', (event, entry) => {
-            // Esconde placeholder
+        ipcRenderer.on('request-logged', (event, e) => {
             if (logEmpty) logEmpty.style.display = 'none';
 
-            const time = new Date(entry.timestamp).toLocaleTimeString('pt-BR');
-            const savings = entry.tokensSaved > 0 ? `<span class="text-emerald-400 font-semibold">-${entry.tokensSaved} tk</span>` : '';
-            const cacheTag = entry.cached ? '<span class="badge-cache text-xs font-bold px-1.5 py-0.5 rounded-full ml-1">CACHE</span>' : '';
-            const streamTag = entry.streaming ? '<span class="text-xs text-blue-400 opacity-60 ml-1">⚡stream</span>' : '';
-            const latency = entry.latencyMs ? `<span class="text-xs text-slate-600">${entry.latencyMs}ms</span>` : '';
+            const time = new Date(e.timestamp).toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+            const savings = e.tokensSaved > 0 ? `<span class="text-emerald-400 font-bold text-[10px]">-${e.tokensSaved}tk</span>` : '';
+            const cacheTag = e.cached ? '<span class="badge badge-cache">CACHE</span>' : '';
+            const streamTag = e.streaming ? '<span class="badge badge-stream">SSE</span>' : '';
+            const lat = e.latencyMs ? `<span class="text-[9px] text-slate-700 font-mono">${e.latencyMs}ms</span>` : '';
 
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry flex items-center justify-between bg-slate-800/40 rounded-lg px-3 py-2 text-xs';
-            logEntry.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <span class="text-slate-600 font-mono">${time}</span>
-                    ${getProviderBadge(entry.provider)}
-                    <span class="text-slate-400 font-medium truncate" style="max-width: 180px">${entry.model}</span>
-                    ${cacheTag}
-                    ${streamTag}
+            // Atualiza gráfico
+            addChartPoint(e.tokensSaved || 0);
+
+            const el = document.createElement('div');
+            el.className = 'log-entry flex items-center justify-between bg-slate-900/30 rounded-lg px-3 py-1.5 text-[10px] border border-slate-800/30';
+            el.innerHTML = `
+                <div class="flex items-center gap-1.5 min-w-0">
+                    <span class="text-slate-700 font-mono text-[9px] shrink-0">${time}</span>
+                    ${getBadge(e.provider)}
+                    <span class="text-slate-500 font-semibold truncate" style="max-width:160px">${e.model || '?'}</span>
+                    ${cacheTag}${streamTag}
                 </div>
-                <div class="flex items-center gap-3">
-                    ${savings}
-                    ${latency}
-                </div>
+                <div class="flex items-center gap-2 shrink-0">${savings} ${lat}</div>
             `;
-
-            // Insere no topo (mais recente primeiro)
-            requestLog.insertBefore(logEntry, requestLog.firstChild);
-
-            // Limita a 50 entradas visíveis
-            while (requestLog.children.length > 51) {
-                requestLog.removeChild(requestLog.lastChild);
-            }
+            requestLog.insertBefore(el, requestLog.firstChild);
+            while (requestLog.children.length > 51) requestLog.removeChild(requestLog.lastChild);
         });
 
-        // === BOTÕES ===
-        // Limpar log
+        // ═══════════════ TABS ═══════════════
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                document.getElementById(`tab-${btn.dataset.tab}`).style.display = 'block';
+            });
+        });
+
+        // ═══════════════ BUTTONS ═══════════════
         document.getElementById('btn-clear-log').addEventListener('click', () => {
             requestLog.innerHTML = '';
-            if (logEmpty) {
-                requestLog.appendChild(logEmpty);
-                logEmpty.style.display = 'flex';
-            }
+            if (logEmpty) { requestLog.appendChild(logEmpty); logEmpty.style.display = 'flex'; }
         });
 
-        // Limpar cache
         document.getElementById('btn-clear-cache').addEventListener('click', () => {
             ipcRenderer.send('clear-cache');
             const btn = document.getElementById('btn-clear-cache');
-            btn.innerText = '✅ Cache limpo!';
-            btn.classList.add('text-emerald-400', 'border-emerald-500/30');
-            setTimeout(() => {
-                btn.innerText = '🗑️ Limpar Cache SQLite';
-                btn.classList.remove('text-emerald-400', 'border-emerald-500/30');
-            }, 2000);
+            btn.innerHTML = '✅ Cache limpo!';
+            btn.classList.add('text-emerald-400');
+            setTimeout(() => { btn.innerHTML = '🗑️ Limpar Cache'; btn.classList.remove('text-emerald-400'); }, 2000);
         });
     </script>
 </body>

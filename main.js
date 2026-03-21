@@ -4,71 +4,84 @@
  * ARQUITETURA: Inicializa três sistemas em sequência:
  *   1. SQLite (Cache local para economia de tokens)
  *   2. Express (Servidor proxy no localhost:3000)
- *   3. Electron (Dashboard para monitoramento)
+ *   3. Electron (Dashboard + System Tray para monitoramento)
  * 
- * ZERO-CONFIG: Não há mais configuração de chaves ou seleção de modelo.
- * O proxy detecta tudo automaticamente a partir da requisição da IDE.
+ * ZERO-CONFIG: Sem chaves, sem seleção de modelo. A IDE configura
+ * o baseURL para localhost:3000/v1 e o proxy faz tudo automaticamente.
  * 
- * COMO FUNCIONA:
- *   - A IDE aponta para http://localhost:3000/v1
- *   - A IDE envia a API key no header Authorization
- *   - O proxy detecta o provedor pelo nome do modelo
- *   - O TokenGuard otimiza, cacheia e repassa transparentemente
+ * COPILOT: Compatível com GitHub Copilot via BYOK (VS Code v1.99+)
+ * e extensão "OAI Compatible Provider for Copilot".
+ * 
+ * SYSTEM TRAY: Minimiza para bandeja com ícone de status.
  */
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
 const express = require('express');
 const path = require('path');
 const ProxyController = require('./src/controllers/ProxyController');
 const createApiRoutes = require('./src/routes/apiRoutes');
 const CacheModel = require('./src/models/CacheModel');
 
-// Porta do proxy (pode ser alterado se 3000 estiver ocupado)
+// Porta do proxy
 const PROXY_PORT = 3000;
 
 // Express App
 const server = express();
-server.use(express.json({ limit: '50mb' })); // IDEs mandam payloads pesados de código
+server.use(express.json({ limit: '50mb' }));
 
-// Proxy Controller (zero-config — sem chaves, sem seleção manual)
+// Proxy Controller (zero-config)
 const proxyController = new ProxyController();
 
-// Registra rotas via apiRoutes centralizado
+// Registra rotas
 server.use(createApiRoutes(proxyController));
 
-// Inicialização do Electron
+// Electron
 let mainWindow;
+let tray;
 
-// Callback: encaminha métricas do proxy para o Dashboard em tempo real
+// Callbacks: encaminha métricas e logs para o Dashboard
 proxyController.onStatsUpdated = (stats) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('update-stats', stats);
     }
 };
-
-// Callback: encaminha log de requisições para o Dashboard
 proxyController.onRequestLogged = (entry) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('request-logged', entry);
     }
 };
 
+/**
+ * Cria ícone para o System Tray (gerado via nativeImage para funcionar sem arquivo externo)
+ */
+function createTrayIcon() {
+    // Ícone 16x16 verde simples usando data URL
+    const icon = nativeImage.createFromDataURL(
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAyElEQVR42mNkYPj/n4EKgJGBgYEZm4SRkRFYDUwNFwBZAFaHzQBkA3AagM0FyAagOxvDAJwGEHIBsgHYXIBuAIYL0A3A5gIMA8D+h7uAgYHBBIjFoWI/GBgYXjMwMHxgYGA4x8DA8BesAGQAyHAQ/Q2I54D4GxCfAtIgcfC44P8/OGYi5AKYASD/I5tFyJswA5gwfcqAlwFEuYCAAXhdgGIAbidBXQAOUSb8BuA0BdMFMBeg24nNBVhDAt0FWEMCp3QaAADLEWARnbMuKAAAAABJRU5ErkJggg=='
+    );
+    return icon;
+}
+
 app.whenReady().then(() => {
-    // 1. Inicializar Cache SQLite Local
+    // 1. Cache SQLite
     CacheModel.init();
 
-    // 2. Iniciar Servidor Proxy Express
+    // 2. Servidor Proxy Express
     server.listen(PROXY_PORT, () => {
         console.log(`🚀 TokenGuard Proxy rodando em http://localhost:${PROXY_PORT}`);
-        console.log(`📡 Configure sua IDE: "baseURL": "http://localhost:${PROXY_PORT}/v1"`);
-        console.log('🔑 A API key é extraída automaticamente do header Authorization da IDE');
+        console.log(`📡 Configure sua IDE: baseURL = http://localhost:${PROXY_PORT}/v1`);
+        console.log('🔑 API key extraída automaticamente do header Authorization');
+        console.log('🤖 Suporta: GPT-5.4, Claude 4.6, Gemini 2.5, DeepSeek V3, Grok 3, Llama 4...');
     });
 
-    // 3. Iniciar Dashboard Electron
+    // 3. Dashboard Electron
     mainWindow = new BrowserWindow({
-        width: 950,
-        height: 700,
+        width: 1050,
+        height: 720,
+        minWidth: 900,
+        minHeight: 600,
         autoHideMenuBar: true,
-        backgroundColor: '#0f172a',
+        backgroundColor: '#060918',
+        titleBarStyle: 'default',
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
@@ -76,14 +89,54 @@ app.whenReady().then(() => {
     });
 
     mainWindow.loadFile(path.join(__dirname, 'src/views/index.html'));
+
+    // Minimiza para tray em vez de fechar
+    mainWindow.on('close', (event) => {
+        if (!app.isQuiting) {
+            event.preventDefault();
+            mainWindow.hide();
+        }
+    });
+
+    // 4. System Tray
+    try {
+        tray = new Tray(createTrayIcon());
+        tray.setToolTip('TokenGuard — Proxy Ativo');
+        
+        const contextMenu = Menu.buildFromTemplate([
+            { 
+                label: '📊 Abrir Dashboard', 
+                click: () => { mainWindow.show(); mainWindow.focus(); }
+            },
+            { type: 'separator' },
+            {
+                label: '🟢 Proxy Ativo',
+                type: 'checkbox',
+                checked: true,
+                click: (menuItem) => {
+                    proxyController.toggleProxy(menuItem.checked);
+                    tray.setToolTip(`TokenGuard — Proxy ${menuItem.checked ? 'Ativo' : 'Inativo'}`);
+                }
+            },
+            { type: 'separator' },
+            { 
+                label: '❌ Encerrar TokenGuard', 
+                click: () => { app.isQuiting = true; app.quit(); }
+            }
+        ]);
+        
+        tray.setContextMenu(contextMenu);
+        tray.on('double-click', () => { mainWindow.show(); mainWindow.focus(); });
+    } catch (err) {
+        console.warn('⚠️ System Tray não disponível:', err.message);
+    }
 });
 
-// IPC: Toggle do Proxy (Ligar/Desligar via Dashboard)
+// IPC Events
 ipcMain.on('toggle-proxy', (event, isActive) => {
     proxyController.toggleProxy(isActive);
 });
 
-// IPC: Limpar cache via Dashboard
 ipcMain.on('clear-cache', () => {
     CacheModel.clear().then(() => {
         console.log('🗑️ Cache limpo com sucesso');
@@ -92,4 +145,8 @@ ipcMain.on('clear-cache', () => {
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('before-quit', () => {
+    app.isQuiting = true;
 });
