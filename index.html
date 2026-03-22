@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Norte.AI - Dashboard de monitoramento de uso de tokens de IA por funcionários" />
+  <title>Norte.AI - Monitoramento Inteligente de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🧭%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <img src="/src/assets/logo.png" alt="Norte.AI Logo" style="width: 28px; height: 28px; border-radius: 8px; object-fit: cover;">
+          </div>
+          <span class="logo-text">Norte.AI</span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="dashboard">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-section="employees">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Funcionários</span>
+        </a>
+        <a href="#" class="nav-item" data-section="alerts">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>Alertas</span>
+          <span class="badge" id="alertBadge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Configurações</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="company-info">
+          <div class="company-avatar">N</div>
+          <div class="company-details">
+            <span class="company-name" id="sidebarCompanyName">—</span>
+            <span class="company-plan">Norte.AI</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+          </button>
+          <h1 class="page-title" id="pageTitle">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="date-filter">
+            <button class="filter-btn active" data-range="7">7 dias</button>
+            <button class="filter-btn" data-range="30">30 dias</button>
+            <button class="filter-btn" data-range="90">90 dias</button>
+          </div>
+          <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>Ao vivo</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Section -->
+      <section class="content-section active" id="section-dashboard">
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpiGrid"></div>
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+          <div class="chart-card large">
+            <div class="chart-header">
+              <h3>Uso de Tokens ao Longo do Tempo</h3>
+              <div class="chart-legend" id="lineChartLegend"></div>
+            </div>
+            <div class="chart-body">
+              <canvas id="usageLineChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Custo por Serviço de IA</h3>
+            </div>
+            <div class="chart-body doughnut-container">
+              <canvas id="serviceDoughnutChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Second Row Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Top Funcionários por Uso</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="employeeBarChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Mapa de Atividade (Hora do Dia)</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="activityHeatChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Employees Section -->
+      <section class="content-section" id="section-employees">
+        <div class="section-header">
+          <h2>Funcionários</h2>
+          <div class="search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="employeeSearch" placeholder="Buscar funcionário...">
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="data-table" id="employeeTable">
+            <thead>
+              <tr>
+                <th>Funcionário</th>
+                <th>PC / Dispositivo</th>
+                <th>Tokens Usados</th>
+                <th>Custo (USD)</th>
+                <th>Serviço Mais Usado</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Alerts Section -->
+      <section class="content-section" id="section-alerts">
+        <div class="section-header">
+          <h2>Alertas e Anomalias</h2>
+          <div class="alert-filters">
+            <button class="alert-filter-btn active" data-severity="all">Todos</button>
+            <button class="alert-filter-btn" data-severity="critical">Críticos</button>
+            <button class="alert-filter-btn" data-severity="warning">Avisos</button>
+            <button class="alert-filter-btn" data-severity="info">Info</button>
+          </div>
+        </div>
+        <div class="alerts-list" id="alertsList"></div>
+      </section>
+
+      <!-- Settings Section -->
+      <section class="content-section" id="section-settings">
+        <div class="section-header">
+          <h2>Configurações</h2>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>🏢 Dados da Empresa</h3>
+            <div class="settings-form">
+              <div class="form-group">
+                <label>Nome da Empresa</label>
+                <input type="text" id="companyName" placeholder="Informe o nome da empresa">
+              </div>
+              <div class="form-group">
+                <label>Limite Mensal de Gastos (USD)</label>
+                <input type="number" id="monthlyLimit" placeholder="Ex: 5000">
+              </div>
+              <div class="form-group">
+                <label>Limite Diário por Funcionário (tokens)</label>
+                <input type="number" id="dailyLimit" placeholder="Ex: 100000">
+              </div>
+              <button class="btn-primary" id="saveSettingsBtn">Salvar</button>
+            </div>
+          </div>
+          <div class="settings-card full-width">
+            <h3>📡 Como Conectar um PC</h3>
+            <div class="setup-instructions">
+              <p>O Norte.AI coleta dados de uso através de um agente leve instalado em cada máquina dos funcionários.</p>
+              <div class="step-list">
+                <div class="step">
+                  <span class="step-number">1</span>
+                  <div>
+                    <strong>Copie a pasta "agent" para o PC do funcionário</strong>
+                    <p>A pasta contém o agente e o instalador automático.</p>
+                  </div>
+                </div>
+                <div class="step">
+                  <span class="step-number">2</span>
+                  <div>
+                    <strong>Dê dois cliques em INSTALAR-AGENT.bat</strong>
+                    <p>Ao abrir o agent, ele abrirá uma página no navegador. Preencha apenas o nome, o cargo e a URL deste servidor.</p>
+                    <code>http://IP-DESTE-SERVIDOR:3000</code>
+                  </div>
+                </div>
+                <div class="step">
+                  <span class="step-number">3</span>
+                  <div>
+                    <strong>Configure a ferramenta de IA do funcionário</strong>
+                    <p>Aponte a Base URL da IA para o proxy local do agente:</p>
+                    <code>http://localhost:3210/v1</code>
+                  </div>
+                </div>
+                <div class="step">
+                  <span class="step-number">4</span>
+                  <div>
+                    <strong>Pronto!</strong>
+                    <p>O uso de IA vai aparecer automaticamente neste dashboard em tempo real.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Employee Detail Modal -->
+    <div class="modal-overlay" id="employeeModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modalEmployeeName">Detalhes do Funcionário</h2>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-kpis" id="modalKpis"></div>
+          <div class="modal-chart">
+            <h3>Uso Diário (últimos 30 dias)</h3>
+            <canvas id="modalChart"></canvas>
+          </div>
+          <div class="modal-breakdown">
+            <h3>Uso por Serviço</h3>
+            <div id="modalBreakdown"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

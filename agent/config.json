@@ -1,0 +1,9 @@
+{
+  "serverUrl": "http://IP-DESTE-SERVIDOR:3000",
+  "employeeName": "Julio",
+  "employeeId": "Loops",
+  "pcId": "DESKTOP-CLHPGJT",
+  "department": "fodase",
+  "role": "junior",
+  "proxyPort": 3210
+}

@@ -1,0 +1,12 @@
+{
+  "name": "tokentracker-agent",
+  "version": "1.0.0",
+  "description": "TokenTracker Agent - Proxy local para monitoramento de uso de IA",
+  "main": "agent.cjs",
+  "scripts": {
+    "start": "node agent.cjs"
+  },
+  "bin": {
+    "tokentracker-agent": "./agent.cjs"
+  }
+}

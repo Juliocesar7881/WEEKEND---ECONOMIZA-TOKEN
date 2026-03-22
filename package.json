@@ -1,0 +1,25 @@
+{
+  "name": "tokentracker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "TokenTracker - Dashboard de monitoramento de uso de tokens IA",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "server": "node server/index.cjs",
+    "agent": "node agent/agent.cjs",
+    "start": "npm run build && node server/index.cjs"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^8.0.1"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "chart.js": "^4.5.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
