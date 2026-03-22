@@ -398,11 +398,11 @@ async function renderDoughnutChart() {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#94a3b8', padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
+          labels: { color: '#475569', padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
         },
         tooltip: {
-          backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
-          borderColor: '#334155', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
+          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
           callbacks: { label: (ctx) => ` ${formatCurrency(ctx.parsed)}` },
         },
       },
@@ -441,14 +441,14 @@ async function renderBarChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
-          borderColor: '#334155', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
+          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
           callbacks: { label: (ctx) => ` ${formatNumber(Number(ctx.parsed.x ?? 0) * 1000)} tokens (${formatCurrency(top8[ctx.dataIndex].totalCost)})` },
         },
       },
       scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
-        y: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 12, weight: '500' as any } } },
+        x: { grid: { color: '#edf2fb' }, ticks: { color: '#64748b', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
+        y: { grid: { display: false }, ticks: { color: '#334155', font: { size: 12, weight: '500' as any } } },
       },
     },
   });
@@ -489,8 +489,8 @@ async function renderHeatChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
-          borderColor: '#334155', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
+          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
           callbacks: {
             title: (items) => {
               const hr = items[0].dataIndex;
@@ -502,7 +502,7 @@ async function renderHeatChart() {
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
+        y: { grid: { color: '#edf2fb' }, ticks: { color: '#64748b', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
       },
     },
   });
@@ -526,15 +526,15 @@ function chartOptions(overrides: any = {}) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
-        borderColor: '#334155', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
+          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
         callbacks: overrides.tooltip ? { label: overrides.tooltip.label } : {},
       },
     },
     scales: {
-      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 11 } } },
+      x: { grid: { color: '#edf2fb' }, ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 11 } } },
       y: {
-        grid: { color: 'rgba(255,255,255,0.04)' },
+        grid: { color: '#edf2fb' },
         ticks: { color: '#64748b', font: { size: 11 }, ...(overrides.y || {}) },
       },
     },
@@ -702,15 +702,15 @@ async function openEmployeeModal(employeeId: string) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'top', labels: { color: '#94a3b8', usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } },
+          legend: { position: 'top', labels: { color: '#475569', usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } },
           tooltip: {
-            backgroundColor: '#1e293b', titleColor: '#f1f5f9', bodyColor: '#94a3b8',
+            backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
             callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(Number(ctx.parsed.y ?? 0) * 1000)} tokens` },
           },
         },
         scales: {
           x: { stacked: true, grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 15 } },
-          y: { stacked: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
+          y: { stacked: true, grid: { color: '#edf2fb' }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
         },
       },
     });
