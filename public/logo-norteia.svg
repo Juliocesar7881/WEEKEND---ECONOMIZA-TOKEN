@@ -1,8 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="520" height="140" viewBox="0 0 520 140" role="img" aria-label="norteia logo">
-  <rect width="520" height="140" rx="16" fill="#000000"/>
-  <g font-family="Inter, Poppins, Segoe UI, Arial, sans-serif" font-size="96" font-weight="700" dominant-baseline="middle">
-    <text x="28" y="78" fill="#f8fafc">norte</text>
-    <text x="298" y="78" fill="#00d26a">i</text>
-    <text x="326" y="78" fill="#00d26a">a</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="220" viewBox="0 0 780 220" role="img" aria-label="norteia logo">
+  <g font-family="Inter, Plus Jakarta Sans, Segoe UI, Arial, sans-serif" font-size="156" font-weight="800" dominant-baseline="middle">
+    <text x="20" y="126" fill="#0b0f16" letter-spacing="-3">norte</text>
+    <text x="448" y="126" fill="#00b85f" letter-spacing="-2">i</text>
+    <text x="492" y="126" fill="#00b85f" letter-spacing="-2">a</text>
   </g>
 </svg>
