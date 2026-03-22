@@ -248,7 +248,43 @@ async function renderDashboard() {
 
   } catch (err) {
     console.error('Erro ao carregar dashboard:', err);
+    renderDashboardUnavailableState();
   }
+}
+
+function renderDashboardUnavailableState() {
+  renderKPIs([
+    { label: 'Total de Tokens', value: '0', trend: 0, icon: '⚡', gradient: true, trendLabel: 'API indisponível' },
+    { label: 'Custo Total', value: '$0.00', trend: 0, icon: '💰', trendLabel: 'API indisponível' },
+    { label: 'Usuários Ativos', value: '0', trend: 0, icon: '👥', trendLabel: 'API indisponível' },
+    { label: 'Custo Médio / Usuário', value: '$0.00', trend: 0, icon: '📊', trendLabel: 'API indisponível' },
+    { label: 'Serviço Mais Usado', value: '—', trend: 0, icon: '🤖', trendLabel: 'API indisponível' },
+    { label: 'Alertas Críticos', value: '0', trend: 0, icon: '🚨', trendLabel: 'API indisponível' },
+  ]);
+
+  const badge = document.getElementById('alertBadge');
+  if (badge) badge.textContent = '0';
+
+  const liveLabel = document.querySelector('.live-indicator span:last-child');
+  if (liveLabel) liveLabel.textContent = 'Sem conexão API';
+
+  const legendEl = document.getElementById('lineChartLegend');
+  if (legendEl) legendEl.innerHTML = '';
+
+  if (lineChart) { lineChart.destroy(); lineChart = null; }
+  if (doughnutChart) { doughnutChart.destroy(); doughnutChart = null; }
+  if (barChart) { barChart.destroy(); barChart = null; }
+  if (heatChart) { heatChart.destroy(); heatChart = null; }
+
+  const lineCanvas = document.getElementById('usageLineChart') as HTMLCanvasElement | null;
+  const doughnutCanvas = document.getElementById('serviceDoughnutChart') as HTMLCanvasElement | null;
+  const barCanvas = document.getElementById('employeeBarChart') as HTMLCanvasElement | null;
+  const heatCanvas = document.getElementById('activityHeatChart') as HTMLCanvasElement | null;
+
+  if (lineCanvas) renderEmptyChart(lineCanvas, 'Sem conexão com o backend');
+  if (doughnutCanvas) renderEmptyChart(doughnutCanvas, 'Sem conexão com o backend');
+  if (barCanvas) renderEmptyChart(barCanvas, 'Sem conexão com o backend');
+  if (heatCanvas) renderEmptyChart(heatCanvas, 'Sem conexão com o backend');
 }
 
 interface KPIData {

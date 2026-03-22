@@ -3,7 +3,7 @@
 // Fetches real data from the backend server
 // =============================================
 
-const API_BASE = window.location.origin;
+const API_BASE = (localStorage.getItem('norte_api_base') || '').trim() || window.location.origin;
 
 export interface StatsResponse {
   totalTokens: number;
