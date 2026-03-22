@@ -398,11 +398,11 @@ async function renderDoughnutChart() {
       plugins: {
         legend: {
           position: 'bottom',
-          labels: { color: '#475569', padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
+          labels: { color: '#8ea0b8', padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
         },
         tooltip: {
-          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
-          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#111a27', titleColor: '#e6edf7', bodyColor: '#9ab0cc',
+          borderColor: '#2a3a50', borderWidth: 1, padding: 12, cornerRadius: 8,
           callbacks: { label: (ctx) => ` ${formatCurrency(ctx.parsed)}` },
         },
       },
@@ -421,7 +421,7 @@ async function renderBarChart() {
     return;
   }
 
-  const colors = ['#6366f1', '#06b6d4', '#8b5cf6', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#14b8a6'];
+  const colors = ['#00c98d', '#0fb97f', '#18ad78', '#21a170', '#2a9669', '#ffb020', '#2ed3b7', '#00a978'];
 
   barChart = new Chart(canvas, {
     type: 'bar',
@@ -441,14 +441,14 @@ async function renderBarChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
-          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#111a27', titleColor: '#e6edf7', bodyColor: '#9ab0cc',
+          borderColor: '#2a3a50', borderWidth: 1, padding: 12, cornerRadius: 8,
           callbacks: { label: (ctx) => ` ${formatNumber(Number(ctx.parsed.x ?? 0) * 1000)} tokens (${formatCurrency(top8[ctx.dataIndex].totalCost)})` },
         },
       },
       scales: {
-        x: { grid: { color: '#edf2fb' }, ticks: { color: '#64748b', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
-        y: { grid: { display: false }, ticks: { color: '#334155', font: { size: 12, weight: '500' as any } } },
+        x: { grid: { color: 'rgba(148, 163, 184, 0.14)' }, ticks: { color: '#7f93ae', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
+        y: { grid: { display: false }, ticks: { color: '#9cb0ca', font: { size: 12, weight: '500' as any } } },
       },
     },
   });
@@ -473,8 +473,8 @@ async function renderHeatChart() {
     const intensity = val / maxVal;
     if (!isBusiness && intensity > 0.2) return `rgba(239, 68, 68, ${0.3 + intensity * 0.7})`;
     return isBusiness
-      ? `rgba(99, 102, 241, ${0.2 + intensity * 0.8})`
-      : `rgba(100, 116, 139, ${0.1 + intensity * 0.3})`;
+      ? `rgba(0, 201, 141, ${0.24 + intensity * 0.76})`
+      : `rgba(58, 82, 112, ${0.12 + intensity * 0.34})`;
   });
 
   heatChart = new Chart(canvas, {
@@ -489,8 +489,8 @@ async function renderHeatChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
-          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#111a27', titleColor: '#e6edf7', bodyColor: '#9ab0cc',
+          borderColor: '#2a3a50', borderWidth: 1, padding: 12, cornerRadius: 8,
           callbacks: {
             title: (items) => {
               const hr = items[0].dataIndex;
@@ -501,8 +501,8 @@ async function renderHeatChart() {
         },
       },
       scales: {
-        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } },
-        y: { grid: { color: '#edf2fb' }, ticks: { color: '#64748b', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
+        x: { grid: { display: false }, ticks: { color: '#7f93ae', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(148, 163, 184, 0.14)' }, ticks: { color: '#7f93ae', font: { size: 11 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
       },
     },
   });
@@ -511,7 +511,7 @@ async function renderHeatChart() {
 function renderEmptyChart(canvas: HTMLCanvasElement, message: string) {
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#64748b';
+  ctx.fillStyle = '#7f93ae';
   ctx.font = '14px Inter, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(message, canvas.width / 2, canvas.height / 2);
@@ -526,16 +526,16 @@ function chartOptions(overrides: any = {}) {
     plugins: {
       legend: { display: false },
       tooltip: {
-          backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
-          borderColor: '#dbe6f6', borderWidth: 1, padding: 12, cornerRadius: 8,
+          backgroundColor: '#111a27', titleColor: '#e6edf7', bodyColor: '#9ab0cc',
+          borderColor: '#2a3a50', borderWidth: 1, padding: 12, cornerRadius: 8,
         callbacks: overrides.tooltip ? { label: overrides.tooltip.label } : {},
       },
     },
     scales: {
-      x: { grid: { color: '#edf2fb' }, ticks: { color: '#64748b', maxTicksLimit: 10, font: { size: 11 } } },
+      x: { grid: { color: 'rgba(148, 163, 184, 0.14)' }, ticks: { color: '#7f93ae', maxTicksLimit: 10, font: { size: 11 } } },
       y: {
-        grid: { color: '#edf2fb' },
-        ticks: { color: '#64748b', font: { size: 11 }, ...(overrides.y || {}) },
+        grid: { color: 'rgba(148, 163, 184, 0.14)' },
+        ticks: { color: '#7f93ae', font: { size: 11 }, ...(overrides.y || {}) },
       },
     },
   };
@@ -702,15 +702,15 @@ async function openEmployeeModal(employeeId: string) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'top', labels: { color: '#475569', usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } },
+          legend: { position: 'top', labels: { color: '#8ea0b8', usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } },
           tooltip: {
-            backgroundColor: '#ffffff', titleColor: '#0f172a', bodyColor: '#475569',
+            backgroundColor: '#111a27', titleColor: '#e6edf7', bodyColor: '#9ab0cc',
             callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(Number(ctx.parsed.y ?? 0) * 1000)} tokens` },
           },
         },
         scales: {
-          x: { stacked: true, grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 15 } },
-          y: { stacked: true, grid: { color: '#edf2fb' }, ticks: { color: '#64748b', font: { size: 10 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
+          x: { stacked: true, grid: { display: false }, ticks: { color: '#7f93ae', font: { size: 10 }, maxTicksLimit: 15 } },
+          y: { stacked: true, grid: { color: 'rgba(148, 163, 184, 0.14)' }, ticks: { color: '#7f93ae', font: { size: 10 }, callback: (v: any) => formatNumber(Number(v) * 1000) } },
         },
       },
     });
