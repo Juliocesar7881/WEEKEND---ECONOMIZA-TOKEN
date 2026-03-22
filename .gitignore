@@ -25,3 +25,9 @@ dist-ssr
 
 # Local Netlify folder
 .netlify
+
+# Local runtime data
+agent/config.json
+server/tokentracker.db
+server/tokentracker.db-shm
+server/tokentracker.db-wal
